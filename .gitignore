@@ -1,0 +1,14 @@
+venv/
+.env
+__pycache__/
+*.pyc
+logs/
+ai_engine_backup.py
+packages.txt
+
+# Ollama installers and archives
+*.tar.zst
+
+# Debug logs
+*.log
+ollama-debug.log
