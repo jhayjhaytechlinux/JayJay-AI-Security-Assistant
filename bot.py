@@ -12,6 +12,7 @@ from ai_engine import generate_response
 from memory import clear_history
 from security import is_authorized
 from logger import log_event
+from health_check import run_health_check
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -75,14 +76,14 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 def main():
 
+    # Run startup health checks
+    run_health_check()
+
     app = Application.builder().token(
         TELEGRAM_BOT_TOKEN
     ).build()
 
-    app.add_handler(
-        CommandHandler("start", start)
-    )
-
+    app.add_handler(CommandHandler("start", start))
     app.add_handler(
         MessageHandler(
             filters.TEXT & ~filters.COMMAND,
