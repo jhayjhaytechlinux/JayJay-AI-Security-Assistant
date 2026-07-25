@@ -15,10 +15,26 @@ def analyze_scan(scan_text: str) -> str:
 
     scan_text = scan_text.lower()
 
+    # ---------------------------------
+    # Detect target automatically
+    # ---------------------------------
+
+    target = "Unknown Host"
+
+    match = re.search(
+        r"nmap scan report for\s+([^\n\r]+)",
+        scan_text,
+        re.IGNORECASE,
+    )
+
+    if match:
+        target = match.group(1).strip()
+
     findings = []
     details = []
 
     services = [
+
         (
             "21/tcp",
             "FTP",
@@ -26,6 +42,7 @@ def analyze_scan(scan_text: str) -> str:
             "Replace FTP with SFTP.",
             "ftp",
         ),
+
         (
             "22/tcp",
             "SSH",
@@ -33,6 +50,7 @@ def analyze_scan(scan_text: str) -> str:
             "Disable password login and use SSH keys.",
             "openssh",
         ),
+
         (
             "23/tcp",
             "Telnet",
@@ -40,6 +58,7 @@ def analyze_scan(scan_text: str) -> str:
             "Disable Telnet immediately.",
             "telnet",
         ),
+
         (
             "25/tcp",
             "SMTP",
@@ -47,6 +66,7 @@ def analyze_scan(scan_text: str) -> str:
             "Enable SMTP authentication and TLS.",
             "smtp",
         ),
+
         (
             "53/tcp",
             "DNS",
@@ -54,6 +74,7 @@ def analyze_scan(scan_text: str) -> str:
             "Restrict recursive queries and consider DNSSEC.",
             "dns",
         ),
+
         (
             "80/tcp",
             "HTTP",
@@ -61,6 +82,7 @@ def analyze_scan(scan_text: str) -> str:
             "Redirect users to HTTPS.",
             "apache",
         ),
+
         (
             "110/tcp",
             "POP3",
@@ -68,6 +90,7 @@ def analyze_scan(scan_text: str) -> str:
             "Use POP3S or migrate to secure protocols.",
             "pop3",
         ),
+
         (
             "143/tcp",
             "IMAP",
@@ -75,6 +98,7 @@ def analyze_scan(scan_text: str) -> str:
             "Enable IMAPS and require encryption.",
             "imap",
         ),
+
         (
             "443/tcp",
             "HTTPS",
@@ -82,6 +106,7 @@ def analyze_scan(scan_text: str) -> str:
             "Keep TLS certificates updated.",
             "nginx",
         ),
+
         (
             "445/tcp",
             "SMB",
@@ -89,6 +114,7 @@ def analyze_scan(scan_text: str) -> str:
             "Restrict SMB with firewall rules.",
             "smb",
         ),
+
         (
             "3306/tcp",
             "MySQL",
@@ -96,6 +122,7 @@ def analyze_scan(scan_text: str) -> str:
             "Restrict network access and use strong credentials.",
             "mysql",
         ),
+
         (
             "3389/tcp",
             "RDP",
@@ -103,6 +130,7 @@ def analyze_scan(scan_text: str) -> str:
             "Restrict access and enable MFA.",
             "rdp",
         ),
+
         (
             "5432/tcp",
             "PostgreSQL",
@@ -110,6 +138,7 @@ def analyze_scan(scan_text: str) -> str:
             "Allow access only from trusted hosts.",
             "postgresql",
         ),
+
         (
             "6379/tcp",
             "Redis",
@@ -117,6 +146,7 @@ def analyze_scan(scan_text: str) -> str:
             "Enable authentication and avoid public exposure.",
             "redis",
         ),
+
         (
             "27017/tcp",
             "MongoDB",
@@ -132,12 +162,12 @@ def analyze_scan(scan_text: str) -> str:
 
             severity = "Medium"
 
-            if port in [
+            if port in (
                 "21/tcp",
                 "23/tcp",
                 "3389/tcp",
                 "445/tcp",
-            ]:
+            ):
                 severity = "High"
 
             findings.append(
@@ -149,16 +179,12 @@ def analyze_scan(scan_text: str) -> str:
 
             block = f"🔹 Port {port.split('/')[0]} ({name})\n"
 
-            version = None
-
             pattern = rf"{re.escape(port)}\s+open\s+(.+)"
 
             match = re.search(pattern, scan_text)
 
             if match:
                 version = match.group(1).strip()
-
-            if version:
                 block += f"- Service Detected: {version}\n"
 
             block += f"- {description}\n"
@@ -189,7 +215,7 @@ def analyze_scan(scan_text: str) -> str:
         )
 
     report = generate_report(
-        target="Unknown Host",
+        target=target,
         findings=findings,
     )
 
