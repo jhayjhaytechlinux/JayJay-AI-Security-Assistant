@@ -2,6 +2,27 @@
 Analyze Nmap scan results.
 """
 
+import re
+
+
+def get_service_version(scan_text: str, port: str):
+    """
+    Extract the service/version information
+    from an Nmap scan line.
+    """
+
+    pattern = rf"^{port}/tcp\s+open\s+(.+)$"
+
+    for line in scan_text.splitlines():
+        line = line.strip()
+
+        match = re.match(pattern, line, re.IGNORECASE)
+
+        if match:
+            return match.group(1)
+
+    return None
+
 
 def analyze_scan(scan_text: str) -> str:
     """
@@ -11,121 +32,125 @@ def analyze_scan(scan_text: str) -> str:
 
     findings = []
 
-    if "21/tcp" in scan_text:
-        findings.append(
-            "🔹 Port 21 (FTP)\n"
-            "- FTP transmits data in plaintext.\n"
-            "- Recommendation: Replace FTP with SFTP."
-        )
+    scan_text = scan_text.lower()
 
-    if "22/tcp" in scan_text:
-        findings.append(
-            "🔹 Port 22 (SSH)\n"
-            "- Used for secure remote administration.\n"
-            "- Recommendation: Disable password login and use SSH keys."
-        )
+    ports = {
+        "21": (
+            "FTP",
+            "FTP transmits data in plaintext.",
+            "Replace FTP with SFTP."
+        ),
+        "22": (
+            "SSH",
+            "Used for secure remote administration.",
+            "Disable password login and use SSH keys."
+        ),
+        "23": (
+            "Telnet",
+            "Telnet is insecure.",
+            "Disable Telnet immediately."
+        ),
+        "25": (
+            "SMTP",
+            "Mail transfer service detected.",
+            "Enable SMTP authentication and TLS."
+        ),
+        "53": (
+            "DNS",
+            "DNS service detected.",
+            "Restrict recursive queries and consider DNSSEC."
+        ),
+        "80": (
+            "HTTP",
+            "Web traffic is unencrypted.",
+            "Redirect users to HTTPS."
+        ),
+        "110": (
+            "POP3",
+            "Email retrieval service detected.",
+            "Use POP3S or migrate to secure protocols."
+        ),
+        "143": (
+            "IMAP",
+            "Email access service detected.",
+            "Enable IMAPS and require encryption."
+        ),
+        "443": (
+            "HTTPS",
+            "Secure encrypted web traffic.",
+            "Keep TLS certificates updated."
+        ),
+        "445": (
+            "SMB",
+            "SMB file sharing service detected.",
+            "Restrict SMB access with firewall rules."
+        ),
+        "3306": (
+            "MySQL",
+            "MySQL database detected.",
+            "Restrict network access and use strong credentials."
+        ),
+        "3389": (
+            "RDP",
+            "Remote Desktop detected.",
+            "Restrict access and enable MFA."
+        ),
+        "5432": (
+            "PostgreSQL",
+            "PostgreSQL database detected.",
+            "Allow access only from trusted hosts."
+        ),
+        "6379": (
+            "Redis",
+            "Redis service detected.",
+            "Enable authentication and avoid public exposure."
+        ),
+        "27017": (
+            "MongoDB",
+            "MongoDB database detected.",
+            "Enable authentication and restrict exposure."
+        ),
+    }
 
-    if "23/tcp" in scan_text:
-        findings.append(
-            "🔹 Port 23 (Telnet)\n"
-            "- Telnet is insecure.\n"
-            "- Recommendation: Disable Telnet immediately."
-        )
+    for port, details in ports.items():
 
-    if "25/tcp" in scan_text:
-        findings.append(
-            "🔹 Port 25 (SMTP)\n"
-            "- Mail transfer service detected.\n"
-            "- Recommendation: Enable SMTP authentication and TLS."
-        )
+        if f"{port}/tcp" in scan_text:
 
-    if "53/tcp" in scan_text:
-        findings.append(
-            "🔹 Port 53 (DNS)\n"
-            "- DNS service detected.\n"
-            "- Recommendation: Restrict recursive queries and consider DNSSEC."
-        )
+            name, description, recommendation = details
 
-    if "80/tcp" in scan_text:
-        findings.append(
-            "🔹 Port 80 (HTTP)\n"
-            "- Web traffic is unencrypted.\n"
-            "- Recommendation: Redirect users to HTTPS."
-        )
+            service = get_service_version(scan_text, port)
 
-    if "110/tcp" in scan_text:
-        findings.append(
-            "🔹 Port 110 (POP3)\n"
-            "- Email retrieval service detected.\n"
-            "- Recommendation: Use POP3S or migrate to more secure protocols."
-        )
+            if service:
 
-    if "143/tcp" in scan_text:
-        findings.append(
-            "🔹 Port 143 (IMAP)\n"
-            "- Email access service detected.\n"
-            "- Recommendation: Enable IMAPS and require encryption."
-        )
+                findings.append(
+                    f"🔹 Port {port} ({name})\n"
+                    f"- Service Detected: {service}\n"
+                    f"- {description}\n"
+                    f"- Recommendation: {recommendation}"
+                )
 
-    if "443/tcp" in scan_text:
-        findings.append(
-            "🔹 Port 443 (HTTPS)\n"
-            "- Secure encrypted web traffic.\n"
-            "- Recommendation: Keep TLS certificates up to date."
-        )
+            else:
 
-    if "445/tcp" in scan_text:
-        findings.append(
-            "🔹 Port 445 (SMB)\n"
-            "- SMB can expose file sharing services.\n"
-            "- Recommendation: Restrict access with firewall rules."
-        )
-
-    if "3306/tcp" in scan_text:
-        findings.append(
-            "🔹 Port 3306 (MySQL)\n"
-            "- MySQL database detected.\n"
-            "- Recommendation: Restrict network access and use strong credentials."
-        )
-
-    if "3389/tcp" in scan_text:
-        findings.append(
-            "🔹 Port 3389 (RDP)\n"
-            "- Remote Desktop detected.\n"
-            "- Recommendation: Restrict access and enable MFA."
-        )
-
-    if "5432/tcp" in scan_text:
-        findings.append(
-            "🔹 Port 5432 (PostgreSQL)\n"
-            "- PostgreSQL database detected.\n"
-            "- Recommendation: Allow access only from trusted hosts."
-        )
-
-    if "6379/tcp" in scan_text:
-        findings.append(
-            "🔹 Port 6379 (Redis)\n"
-            "- Redis service detected.\n"
-            "- Recommendation: Enable authentication and avoid exposing it publicly."
-        )
-
-    if "27017/tcp" in scan_text:
-        findings.append(
-            "🔹 Port 27017 (MongoDB)\n"
-            "- MongoDB service detected.\n"
-            "- Recommendation: Enable authentication and restrict network exposure."
-        )
+                findings.append(
+                    f"🔹 Port {port} ({name})\n"
+                    f"- {description}\n"
+                    f"- Recommendation: {recommendation}"
+                )
 
     if not findings:
+
         return (
             "⚠️ No recognized ports were found.\n\n"
             "Please provide a valid Nmap scan."
         )
 
     report = (
-        "🛡️ JayJay AI Security Analysis\n\n"
+        "🛡️ JayJay AI Security Analysis\n"
+        "====================================\n\n"
+        f"📊 Open Services Detected: {len(findings)}\n\n"
         + "\n\n".join(findings)
-        + "\n\n✅ Analysis Complete."
+        + "\n\n===================================="
+        "\n✅ Analysis Complete."
     )
 
     return report
