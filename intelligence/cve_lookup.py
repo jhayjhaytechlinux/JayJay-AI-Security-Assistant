@@ -1,75 +1,55 @@
 """
-CVE lookup module.
+Unified CVE lookup engine.
 
-This module will eventually retrieve live CVE information.
-For now, it contains a small local database for testing.
+1. Check the local CVE database.
+2. If nothing is found, query the live NVD API.
 """
 
-CVE_DATABASE = {
-    "openssh": [
-        {
-            "cve": "CVE-2024-6387",
-            "severity": "High",
-            "cvss": "8.1",
-            "description": (
-                "Possible remote code execution vulnerability "
-                "in certain OpenSSH server configurations."
-            ),
-            "recommendation": (
-                "Update OpenSSH to the latest patched version."
-            ),
-        }
-    ],
-
-    "apache": [
-        {
-            "cve": "CVE-2024-38475",
-            "severity": "High",
-            "cvss": "8.8",
-            "description": (
-                "Improper handling of URL rewriting may allow attacks."
-            ),
-            "recommendation": (
-                "Upgrade Apache HTTP Server to the latest release."
-            ),
-        }
-    ],
-
-    "nginx": [
-        {
-            "cve": "CVE-2023-44487",
-            "severity": "High",
-            "cvss": "7.5",
-            "description": (
-                "HTTP/2 Rapid Reset attack may cause denial of service."
-            ),
-            "recommendation": (
-                "Update Nginx and apply HTTP/2 mitigations."
-            ),
-        }
-    ],
-
-    "mysql": [
-        {
-            "cve": "CVE-2024-21096",
-            "severity": "Medium",
-            "cvss": "6.5",
-            "description": (
-                "MySQL vulnerability that may allow privilege escalation."
-            ),
-            "recommendation": (
-                "Apply Oracle's latest MySQL security updates."
-            ),
-        }
-    ],
-}
+from config import ENABLE_LIVE_CVE_LOOKUP
+from intelligence.local_database import lookup_local
+from intelligence.live_lookup import lookup_live
+from intelligence.nvd import search_nvd
 
 
-def lookup_cves(service_name: str):
+def lookup_cves(service):
     """
-    Return known CVEs for a detected service.
+    Return CVEs for a service.
+
+    Priority:
+        1. Local database
+        2. Live lookup
+        3. Official NVD
     """
 
-    service_name = service_name.lower()
+    service = service.lower().strip()
 
-    return CVE_DATABASE.get(service_name, [])
+    # -----------------------------
+    # Local database
+    # -----------------------------
+
+    results = lookup_local(service)
+
+    if results:
+        return results
+
+    # -----------------------------
+    # Existing live lookup
+    # -----------------------------
+
+    results = lookup_live(service)
+
+    if results:
+        return results
+
+    # -----------------------------
+    # Official NVD lookup
+    # -----------------------------
+
+    if ENABLE_LIVE_CVE_LOOKUP:
+
+        results = search_nvd(service)
+
+        if results:
+            return results
+
+    return []
