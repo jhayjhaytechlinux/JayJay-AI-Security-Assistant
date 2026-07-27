@@ -5,7 +5,6 @@ Analyze Nmap scan results and generate a professional report.
 import re
 
 from intelligence.cve_lookup import lookup_cves
-from intelligence.risk_engine import build_priority_summary
 from commands.report import generate_report
 
 
@@ -159,60 +158,55 @@ def analyze_scan(scan_text: str) -> str:
 
     for port, name, description, recommendation, keyword in services:
 
-        if port not in scan_text:
-            continue
+        if port in scan_text:
 
-        severity = "Medium"
+            severity = "Medium"
 
-        if port in (
-            "21/tcp",
-            "23/tcp",
-            "3389/tcp",
-            "445/tcp",
-        ):
-            severity = "High"
+            if port in (
+                "21/tcp",
+                "23/tcp",
+                "3389/tcp",
+                "445/tcp",
+            ):
+                severity = "High"
 
-        findings.append(
-            {
-                "service": name,
-                "severity": severity,
-            }
-        )
+            findings.append(
+                {
+                    "service": name,
+                    "severity": severity,
+                }
+            )
 
-        block = f"🔹 Port {port.split('/')[0]} ({name})\n"
+            block = f"🔹 Port {port.split('/')[0]} ({name})\n"
 
-        pattern = rf"{re.escape(port)}\s+open\s+(.+)"
+            pattern = rf"{re.escape(port)}\s+open\s+(.+)"
 
-        match = re.search(pattern, scan_text)
+            match = re.search(pattern, scan_text)
 
-        if match:
-            version = match.group(1).strip()
-            block += f"- Service Detected: {version}\n"
+            if match:
+                version = match.group(1).strip()
+                block += f"- Service Detected: {version}\n"
 
-        block += f"- {description}\n"
-        block += f"- Recommendation: {recommendation}\n"
+            block += f"- {description}\n"
+            block += f"- Recommendation: {recommendation}\n"
 
-        cves = lookup_cves(keyword)
+            cves = lookup_cves(keyword)
 
-        if cves:
+            if cves:
 
-            block += "\n🚨 Known CVEs\n\n"
+                block += "\n🚨 Known CVEs\n\n"
 
-            for cve in cves:
+                for cve in cves:
 
-                block += (
-                    f"• {cve['cve']}\n"
-                    f"  Severity: {cve['severity']}\n"
-                    f"  CVSS: {cve['cvss']}\n"
-                    f"  Description: {cve['description']}\n"
-                    f"  Fix: {cve['recommendation']}\n\n"
-                )
+                    block += (
+                        f"• {cve['cve']}\n"
+                        f"  Severity: {cve['severity']}\n"
+                        f"  CVSS: {cve['cvss']}\n"
+                        f"  Description: {cve['description']}\n"
+                        f"  Fix: {cve['recommendation']}\n\n"
+                    )
 
-        details.append(block.rstrip())
-
-       # ---------------------------------
-    # No recognized services
-    # ---------------------------------
+            details.append(block.rstrip())
 
     if not findings:
         return (
@@ -220,27 +214,12 @@ def analyze_scan(scan_text: str) -> str:
             "Please provide a valid Nmap scan."
         )
 
-    # ---------------------------------
-    # Generate executive report
-    # ---------------------------------
-
     report = generate_report(
         target=target,
         findings=findings,
     )
 
-    # ---------------------------------
-    # Priority remediation plan
-    # ---------------------------------
-
-    report += "\n\n"
-    report += build_priority_summary(findings)
-
-    # ---------------------------------
-    # Detailed findings
-    # ---------------------------------
-
-    report += "\nDetailed Findings\n"
+    report += "\n\nDetailed Findings\n"
     report += "====================================\n\n"
 
     report += "\n\n".join(details)
@@ -249,4 +228,3 @@ def analyze_scan(scan_text: str) -> str:
     report += "\n✅ Analysis Complete."
 
     return report
-
