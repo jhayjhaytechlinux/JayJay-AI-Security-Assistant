@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<nmaprun>
+  <host>
+    <status state="up"/>
+    <address addr="192.168.1.10" addrtype="ipv4"/>
+
+    <ports>
+
+      <port protocol="tcp" portid="22">
+        <state state="open"/>
+        <service
+            name="ssh"
+            product="OpenSSH"
+            version="8.9p1 Ubuntu"/>
+      </port>
+
+      <port protocol="tcp" portid="80">
+        <state state="open"/>
+        <service
+            name="http"
+            product="Apache httpd"
+            version="2.4.58"/>
+      </port>
+
+      <port protocol="tcp" portid="443">
+        <state state="open"/>
+        <service
+            name="https"
+            product="nginx"
+            version="1.28.0"/>
+      </port>
+
+      <port protocol="tcp" portid="3306">
+        <state state="open"/>
+        <service
+            name="mysql"
+            product="MySQL"
+            version="8.0.39"/>
+      </port>
+
+    </ports>
+  </host>
+</nmaprun>

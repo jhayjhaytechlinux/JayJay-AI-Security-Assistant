@@ -8,12 +8,15 @@ from telegram.ext import (
 )
 
 from config import TELEGRAM_BOT_TOKEN, AUTHORIZED_USERS
-from ai_engine import generate_response
 from memory import clear_history
 from security import is_authorized
 from logger import log_event
 from health_check import run_health_check
-from commands.analyze import analyze_scan
+
+from handlers import (
+    message_handler,
+    xml_handler,
+)
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -42,58 +45,47 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 
-async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
-
-    user_id = update.effective_user.id
-
-    if not is_authorized(user_id, AUTHORIZED_USERS):
-        await update.message.reply_text(
-            "⛔ Unauthorized access detected."
-        )
-        return
-
-    user_message = update.message.text
-
-    user = update.effective_user
-
-    log_event(
-        f"AUTHORIZED | USER_ID: {user.id} | USERNAME: {user.username} | MESSAGE: {user_message}"
-    )
-
-    # Show a temporary message while the AI is working
-    thinking = await update.message.reply_text(
-        "🤖 Thinking..."
-    )
-
-    # If the message looks like an Nmap scan,
-    # analyze it locally instead of sending it to the AI.
-    if "/tcp" in user_message and "open" in user_message:
-        response = analyze_scan(user_message)
-    else:
-        response = generate_response(
-            user_id,
-            user_message,
-        )
-
-    # Replace the "Thinking..." message with the answer
-    await thinking.edit_text(response)
-
-
 def main():
 
     # Run startup health checks
     run_health_check()
 
-    app = Application.builder().token(
-        TELEGRAM_BOT_TOKEN
-    ).build()
+    app = (
+        Application.builder()
+        .token(TELEGRAM_BOT_TOKEN)
+        .build()
+    )
 
-    app.add_handler(CommandHandler("start", start))
+    app.add_handler(
+        CommandHandler(
+            "start",
+            start,
+        )
+    )
 
+    # Handle uploaded XML files
+    app.add_handler(
+        MessageHandler(
+            filters.Document.FileExtension("xml"),
+            lambda update, context: xml_handler(
+                update,
+                context,
+                AUTHORIZED_USERS,
+                is_authorized,
+            ),
+        )
+    )
+
+    # Handle normal text messages
     app.add_handler(
         MessageHandler(
             filters.TEXT & ~filters.COMMAND,
-            message_handler,
+            lambda update, context: message_handler(
+                update,
+                context,
+                AUTHORIZED_USERS,
+                is_authorized,
+            ),
         )
     )
 
