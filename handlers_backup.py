@@ -43,24 +43,16 @@ async def message_handler(update, context, authorized_users, is_authorized):
             report_text=response,
         )
 
-        await thinking.edit_text(response)
+        response += (
+            f"\n\n📄 PDF Report Generated\n"
+            f"{pdf_file}"
+        )
 
-        with open(pdf_file, "rb") as pdf:
-            await update.message.reply_document(
-                document=pdf,
-                filename=os.path.basename(pdf_file),
-                caption=(
-                    "🛡️ JayJay AI Security Assessment Report\n\n"
-                    "✅ PDF report generated successfully."
-                ),
-            )
-
-        return
-
-    response = generate_response(
-        user_id,
-        user_message,
-    )
+    else:
+        response = generate_response(
+            user_id,
+            user_message,
+        )
 
     await thinking.edit_text(response)
 
@@ -108,14 +100,9 @@ async def xml_handler(update, context, authorized_users, is_authorized):
         report_text=response,
     )
 
-    await thinking.edit_text(response)
+    response += (
+        f"\n\n📄 PDF Report Generated\n"
+        f"{pdf_file}"
+    )
 
-    with open(pdf_file, "rb") as pdf:
-        await update.message.reply_document(
-            document=pdf,
-            filename=os.path.basename(pdf_file),
-            caption=(
-                "🛡️ JayJay AI Security Assessment Report\n\n"
-                "✅ PDF report generated successfully."
-            ),
-        )
+    await thinking.edit_text(response)
