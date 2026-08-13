@@ -12,3 +12,6 @@ packages.txt
 # Debug logs
 *.log
 ollama-debug.log
+
+# Python virtual environment
+.venv/
