@@ -1,5 +1,11 @@
 import requests
-from config import AI_PROVIDER, OLLAMA_HOST, OLLAMA_MODEL, TELEGRAM_BOT_TOKEN
+
+from config import (
+    AI_PROVIDER,
+    OLLAMA_HOST,
+    OLLAMA_MODEL,
+    TELEGRAM_BOT_TOKEN,
+)
 
 
 def run_health_check():
@@ -19,7 +25,10 @@ def run_health_check():
     # Ollama Check
     if AI_PROVIDER.lower() == "ollama":
         try:
-            response = requests.get(f"{OLLAMA_HOST}/api/tags", timeout=5)
+            response = requests.get(
+                f"{OLLAMA_HOST}/api/tags",
+                timeout=5,
+            )
 
             if response.status_code == 200:
                 print("✅ Ollama Server: Online")
@@ -27,7 +36,7 @@ def run_health_check():
                 models = response.json().get("models", [])
 
                 installed = any(
-                    model["name"] == OLLAMA_MODEL
+                    model.get("name") == OLLAMA_MODEL
                     for model in models
                 )
 
@@ -37,9 +46,17 @@ def run_health_check():
                     print(f"❌ Model Missing: {OLLAMA_MODEL}")
 
             else:
-                print("❌ Ollama Server Responded with Error")
+                print(
+                    f"❌ Ollama Server Responded with Error "
+                    f"(HTTP {response.status_code})"
+                )
 
-        except Exception:
+        except requests.RequestException:
             print("❌ Ollama Server: Offline")
 
-    print("========================================\n")
+    print("========================================")
+    print()
+
+
+if __name__ == "__main__":
+    run_health_check()
