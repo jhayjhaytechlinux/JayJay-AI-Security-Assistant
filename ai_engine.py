@@ -74,6 +74,7 @@ def ollama_response(user_id, user_message):
         response = ollama_client.chat(
             model=OLLAMA_MODEL,
             messages=messages,
+            keep_alive="10m",
             options={
                 "temperature": 0.2,
                 "num_predict": 180,
