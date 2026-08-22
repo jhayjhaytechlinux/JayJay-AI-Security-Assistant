@@ -1,6 +1,6 @@
 from collections import defaultdict
 
-MAX_HISTORY = 6
+MAX_HISTORY = 2
 
 conversation_memory = defaultdict(list)
 
