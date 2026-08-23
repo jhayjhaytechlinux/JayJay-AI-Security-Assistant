@@ -7,7 +7,13 @@ from telegram.ext import (
     filters,
 )
 
-from config import TELEGRAM_BOT_TOKEN, AUTHORIZED_USERS
+from config import (
+    TELEGRAM_BOT_TOKEN,
+    AUTHORIZED_USERS,
+    AI_PROVIDER,
+    OLLAMA_MODEL,
+)
+
 from memory import clear_history
 from security import is_authorized
 from logger import log_event
@@ -45,9 +51,72 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 
+async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+
+    user_id = update.effective_user.id
+
+    if not is_authorized(user_id, AUTHORIZED_USERS):
+        await update.message.reply_text(
+            "⛔ Unauthorized access detected."
+        )
+        return
+
+    await update.message.reply_text(
+        "🛡️ JayJay AI Security Assistant Commands\n\n"
+        "/start - Start the assistant\n"
+        "/help - Show available commands\n"
+        "/status - Show system status\n"
+        "/clear - Clear conversation memory\n\n"
+        "Capabilities:\n"
+        "🤖 AI cybersecurity assistant\n"
+        "🔎 Vulnerability explanations\n"
+        "📄 Nmap XML analysis\n"
+        "🛡️ Defensive security guidance"
+    )
+
+
+async def status_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+
+    user_id = update.effective_user.id
+
+    if not is_authorized(user_id, AUTHORIZED_USERS):
+        await update.message.reply_text(
+            "⛔ Unauthorized access detected."
+        )
+        return
+
+    await update.message.reply_text(
+        "🟢 JayJay AI Security Assistant Status\n\n"
+        "AI Provider:\n"
+        f"✅ {AI_PROVIDER}\n\n"
+        "Model:\n"
+        f"✅ {OLLAMA_MODEL}\n\n"
+        "Memory:\n"
+        "✅ Active\n\n"
+        "Security Mode:\n"
+        "✅ Defensive Only"
+    )
+
+
+async def clear_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+
+    user_id = update.effective_user.id
+
+    if not is_authorized(user_id, AUTHORIZED_USERS):
+        await update.message.reply_text(
+            "⛔ Unauthorized access detected."
+        )
+        return
+
+    clear_history(user_id)
+
+    await update.message.reply_text(
+        "🧹 Conversation memory cleared successfully."
+    )
+
+
 def main():
 
-    # Run startup health checks
     run_health_check()
 
     app = (
@@ -56,6 +125,7 @@ def main():
         .build()
     )
 
+
     app.add_handler(
         CommandHandler(
             "start",
@@ -63,7 +133,31 @@ def main():
         )
     )
 
-    # Handle uploaded XML files
+
+    app.add_handler(
+        CommandHandler(
+            "help",
+            help_command,
+        )
+    )
+
+
+    app.add_handler(
+        CommandHandler(
+            "status",
+            status_command,
+        )
+    )
+
+
+    app.add_handler(
+        CommandHandler(
+            "clear",
+            clear_command,
+        )
+    )
+
+
     app.add_handler(
         MessageHandler(
             filters.Document.FileExtension("xml"),
@@ -76,7 +170,7 @@ def main():
         )
     )
 
-    # Handle normal text messages
+
     app.add_handler(
         MessageHandler(
             filters.TEXT & ~filters.COMMAND,
@@ -89,7 +183,9 @@ def main():
         )
     )
 
+
     print("🤖 JayJay AI Security Assistant is running...")
+
 
     app.run_polling()
 
