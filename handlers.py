@@ -3,6 +3,7 @@ Telegram message and document handlers.
 """
 
 import os
+import xml.etree.ElementTree as ET
 
 from ai_engine import generate_response
 from commands.analyze import analyze_scan
@@ -130,7 +131,41 @@ async def xml_handler(update, context, authorized_users, is_authorized):
 
     await telegram_file.download_to_drive(file_path)
 
-    response = analyze_xml(file_path)
+    try:
+        response = analyze_xml(file_path)
+
+    except FileNotFoundError:
+        await thinking.edit_text(
+            "❌ The uploaded XML file could not be found. Please upload the file again."
+        )
+        return
+
+    except ET.ParseError:
+        log_event(
+            f"XML_ANALYSIS_ERROR | USER_ID: {user_id} | ERROR: Invalid XML format"
+        )
+        await thinking.edit_text(
+            "❌ Invalid XML format. Please upload a valid Nmap XML scan file."
+        )
+        return
+
+    except OSError as exc:
+        log_event(
+            f"XML_ANALYSIS_ERROR | USER_ID: {user_id} | ERROR: {exc}"
+        )
+        await thinking.edit_text(
+            "❌ The XML scan could not be processed. Please try uploading the file again."
+        )
+        return
+
+    except Exception as exc:
+        log_event(
+            f"XML_ANALYSIS_ERROR | USER_ID: {user_id} | ERROR: {type(exc).__name__}: {exc}"
+        )
+        await thinking.edit_text(
+            "❌ An unexpected error occurred while analyzing the XML scan. Please try again."
+        )
+        return
 
     pdf_file = generate_pdf_report(
         target=document.file_name,
