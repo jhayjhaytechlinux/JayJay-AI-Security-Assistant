@@ -11,6 +11,29 @@ from logger import log_event
 from reports.pdf_report import generate_pdf_report
 
 
+async def send_safe_message(message, text):
+    """
+    Send Telegram messages safely.
+    Handles long AI responses.
+    """
+
+    max_length = 4000
+
+    if len(text) <= max_length:
+        await message.edit_text(text)
+        return
+
+    parts = [
+        text[i:i + max_length]
+        for i in range(0, len(text), max_length)
+    ]
+
+    await message.edit_text(parts[0])
+
+    for part in parts[1:]:
+        await message.reply_text(part)
+
+
 async def message_handler(update, context, authorized_users, is_authorized):
     """
     Handle normal text messages.
@@ -43,7 +66,10 @@ async def message_handler(update, context, authorized_users, is_authorized):
             report_text=response,
         )
 
-        await thinking.edit_text(response)
+        await send_safe_message(
+            thinking,
+            response,
+        )
 
         with open(pdf_file, "rb") as pdf:
             await update.message.reply_document(
@@ -62,7 +88,10 @@ async def message_handler(update, context, authorized_users, is_authorized):
         user_message,
     )
 
-    await thinking.edit_text(response)
+    await send_safe_message(
+        thinking,
+        response,
+    )
 
 
 async def xml_handler(update, context, authorized_users, is_authorized):
@@ -108,7 +137,10 @@ async def xml_handler(update, context, authorized_users, is_authorized):
         report_text=response,
     )
 
-    await thinking.edit_text(response)
+    await send_safe_message(
+        thinking,
+        response,
+    )
 
     with open(pdf_file, "rb") as pdf:
         await update.message.reply_document(
