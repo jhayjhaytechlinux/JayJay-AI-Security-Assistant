@@ -39,3 +39,5 @@ Thumbs.db
 # IDE files
 .vscode/
 .idea/
+# Test files
+sample_scan.xml
