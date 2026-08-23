@@ -77,7 +77,7 @@ def ollama_response(user_id, user_message):
             keep_alive="10m",
             options={
                 "temperature": 0.2,
-                "num_predict": 180,
+                "num_predict": 400,
                 "top_k": 20,
                 "top_p": 0.8,
             },
