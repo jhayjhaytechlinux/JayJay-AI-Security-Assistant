@@ -65,13 +65,52 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "🛡️ JayJay AI Security Assistant Commands\n\n"
         "/start - Start the assistant\n"
         "/help - Show available commands\n"
+        "/about - About this project\n"
         "/status - Show system status\n"
         "/clear - Clear conversation memory\n\n"
         "Capabilities:\n"
         "🤖 AI cybersecurity assistant\n"
         "🔎 Vulnerability explanations\n"
         "📄 Nmap XML analysis\n"
+        "📑 PDF security reports\n"
         "🛡️ Defensive security guidance"
+    )
+
+
+async def about_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+
+    user_id = update.effective_user.id
+
+    if not is_authorized(user_id, AUTHORIZED_USERS):
+        await update.message.reply_text(
+            "⛔ Unauthorized access detected."
+        )
+        return
+
+    await update.message.reply_text(
+        "🛡️ JayJay AI Security Assistant\n\n"
+        "An AI-powered cybersecurity assistant designed "
+        "for security learning, vulnerability analysis, "
+        "and defensive security operations.\n\n"
+
+        "Technology Stack:\n"
+        "🐍 Python\n"
+        "🤖 Ollama Local AI\n"
+        "🧠 Phi-3 Mini LLM\n"
+        "📱 Telegram Bot API\n"
+        "🐧 Ubuntu WSL\n\n"
+
+        "Security Capabilities:\n"
+        "✅ Vulnerability explanations\n"
+        "✅ OWASP security guidance\n"
+        "✅ Nmap XML analysis\n"
+        "✅ Automated PDF reports\n"
+        "✅ Local AI processing\n\n"
+
+        "Security Mode:\n"
+        "🔐 Defensive Security Only\n\n"
+
+        "Built by JayJay 🚀"
     )
 
 
@@ -138,6 +177,14 @@ def main():
         CommandHandler(
             "help",
             help_command,
+        )
+    )
+
+
+    app.add_handler(
+        CommandHandler(
+            "about",
+            about_command,
         )
     )
 
