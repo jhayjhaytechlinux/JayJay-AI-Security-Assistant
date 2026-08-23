@@ -1,17 +1,41 @@
-venv/
+# Environment variables
 .env
+
+# Python virtual environments
+venv/
+.venv/
+
+# Python cache files
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
+
+# Logs
 logs/
-ai_engine_backup.py
+*.log
+ollama-debug.log
+
+# Temporary backup files
+*_backup.py
+*.backup
+
+# Installed packages lists
 packages.txt
 
 # Ollama installers and archives
 *.tar.zst
 
-# Debug logs
-*.log
-ollama-debug.log
+# Generated security reports
+generated_reports/
 
-# Python virtual environment
-.venv/
+# Uploaded files from Telegram
+uploads/
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
